@@ -31,5 +31,5 @@ def __getattr__(name: str):
     raise AttributeError(f"module 'spore' has no attribute {name!r}")
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["Client", "truffle", "spawn"]
