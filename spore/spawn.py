@@ -180,11 +180,40 @@ class SpawnClient:
             ...     idle_timeout="30m",
             ... )
         """
-        raise NotImplementedError(
-            "spawn.launch() requires the spore.host CLI or spored on an EC2 instance. "
-            "Use the CLI: spawn launch --instance-type c8a.2xlarge --ttl 12h\n"
-            "This SDK method will be implemented when the REST API launch endpoint is complete."
+        body: dict = {"instance_type": instance_type}
+        if name:
+            body["name"] = name
+        if region or self._c._region:
+            body["region"] = region or self._c._region
+        if ttl:
+            body["ttl"] = ttl
+        if idle_timeout:
+            body["idle_timeout"] = idle_timeout
+        if spot:
+            body["spot"] = True
+        if on_complete and on_complete != "terminate":
+            body["on_complete"] = on_complete
+        if slack_workspace:
+            body["slack_workspace"] = slack_workspace
+        if active_processes:
+            body["active_processes"] = ",".join(active_processes)
+
+        data = self._c.post("/v1/instances", body)
+        inst = Instance(
+            instance_id=data.get("instance_id", ""),
+            name=data.get("name", name or ""),
+            instance_type=instance_type,
+            state=data.get("state", "pending"),
+            region=data.get("region", region or self._c._region),
+            public_ip=data.get("public_ip", ""),
+            private_ip=data.get("private_ip", ""),
+            availability_zone=data.get("availability_zone", ""),
         )
+        inst._client = self
+
+        if wait:
+            inst.wait_running()
+        return inst
 
     def list(
         self,
