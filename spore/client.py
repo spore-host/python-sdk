@@ -42,8 +42,10 @@ class Client:
         # Sub-clients
         from ._truffle import TruffleClient
         from ._spawn import SpawnClient
+        from ._notifications import NotificationsClient
         self.truffle = TruffleClient(self)
         self.spawn = SpawnClient(self)
+        self.notifications = NotificationsClient(self)
 
     # ── HTTP helpers ──────────────────────────────────────────────────────────
 
@@ -65,6 +67,18 @@ class Client:
 
     def post(self, path: str, body: dict = None) -> dict:
         resp = requests.post(
+            f"{self._api_url}{path}",
+            headers=self._headers(),
+            json=body or {},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete(self, path: str, body: dict = None) -> dict:
+        # Some endpoints (e.g. DELETE /v1/notifications/register) read a JSON body,
+        # which HTTP permits and `requests` supports.
+        resp = requests.delete(
             f"{self._api_url}{path}",
             headers=self._headers(),
             json=body or {},

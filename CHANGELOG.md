@@ -8,6 +8,23 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-07-10
+
+### Added
+- **`spore.notifications` — SMS notification registration.** New
+  `NotificationsClient` (`spore.notifications.register(...)` /
+  `.deregister(...)`) wrapping `POST` / `DELETE /v1/notifications/register` — the
+  one REST endpoint the SDK didn't cover. Supply your chat identity as
+  `platform=`/`workspace_id=`/`user_id=` (assembled into the
+  `platform#workspace#user` key spore-bot uses) or a raw `user_key=`. Also adds
+  `Client.delete()`. (#5)
+
+### Fixed
+- **`spawn.launch()` no longer advertises a dead `phone=` parameter.** It was
+  documented for SMS but silently did nothing — launch doesn't accept `phone`,
+  and SMS registration is a separate endpoint. Removed it; register a number via
+  `spore.notifications.register(...)` instead. (#4)
+
 ## [0.1.3] - 2026-07-09
 
 ### Fixed
@@ -45,6 +62,7 @@ Baseline. Earlier history is in the
 
 ---
 
-[Unreleased]: https://github.com/spore-host/python-sdk/compare/python-v0.1.3...HEAD
+[Unreleased]: https://github.com/spore-host/python-sdk/compare/python-v0.1.4...HEAD
+[0.1.4]: https://github.com/spore-host/python-sdk/compare/python-v0.1.3...python-v0.1.4
 [0.1.3]: https://github.com/spore-host/python-sdk/compare/python-v0.1.2...python-v0.1.3
 [0.1.2]: https://github.com/spore-host/python-sdk/releases/tag/python-v0.1.2

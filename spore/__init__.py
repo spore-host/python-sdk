@@ -18,6 +18,7 @@ Or with an explicit client:
 from __future__ import annotations
 
 from .client import Client
+from ._notifications import NotificationsClient
 from ._spawn import Instance, SpawnClient
 from ._truffle import InstanceType, QuotaInfo, SpotPrice, TruffleClient
 
@@ -63,14 +64,17 @@ class _LazySubClient:
 
 truffle = _LazySubClient("truffle")
 spawn = _LazySubClient("spawn")
+notifications = _LazySubClient("notifications")
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __all__ = [
     "Client",
     "truffle",
     "spawn",
+    "notifications",
     "SpawnClient",
     "TruffleClient",
+    "NotificationsClient",
     "Instance",
     "InstanceType",
     "SpotPrice",
