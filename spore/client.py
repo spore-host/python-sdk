@@ -40,8 +40,8 @@ class Client:
         self._session: Optional[boto3.Session] = None
 
         # Sub-clients
-        from .truffle import TruffleClient
-        from .spawn import SpawnClient
+        from ._truffle import TruffleClient
+        from ._spawn import SpawnClient
         self.truffle = TruffleClient(self)
         self.spawn = SpawnClient(self)
 
