@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, List, Optional, TYPE_CHECKING
@@ -22,6 +21,8 @@ class Instance:
     state: str
     region: str
     public_ip: str = ""
+    private_ip: str = ""
+    availability_zone: str = ""
     dns: str = ""
     launch_time: Optional[datetime] = None
     ttl: str = ""
@@ -199,17 +200,12 @@ class SpawnClient:
             body["active_processes"] = ",".join(active_processes)
 
         data = self._c.post("/v1/instances", body)
-        inst = Instance(
-            instance_id=data.get("instance_id", ""),
-            name=data.get("name", name or ""),
-            instance_type=instance_type,
-            state=data.get("state", "pending"),
-            region=data.get("region", region or self._c._region),
-            public_ip=data.get("public_ip", ""),
-            private_ip=data.get("private_ip", ""),
-            availability_zone=data.get("availability_zone", ""),
-        )
-        inst._client = self
+        # Build via _parse (single source of truth for API→Instance mapping). The
+        # launch response echoes name/public_ip/private_ip/availability_zone/state/
+        # region but NOT instance_type, so fall back to the requested type.
+        data.setdefault("instance_type", instance_type)
+        data.setdefault("state", "pending")
+        inst = self._parse(data)
 
         if wait:
             inst.wait_running()
@@ -252,7 +248,7 @@ class SpawnClient:
     def stop(self, instance_id_or_name: str, hibernate: bool = False) -> Instance:
         """Stop a running instance."""
         action = "hibernate" if hibernate else "stop"
-        data = self._action(instance_id_or_name, action)
+        self._action(instance_id_or_name, action)
         return self.status(instance_id_or_name)
 
     def start(self, instance_id_or_name: str) -> Instance:
@@ -299,6 +295,8 @@ class SpawnClient:
             state=d.get("state", ""),
             region=d.get("region", ""),
             public_ip=d.get("public_ip", ""),
+            private_ip=d.get("private_ip", ""),
+            availability_zone=d.get("availability_zone", ""),
             dns=d.get("dns", ""),
             launch_time=launch_time,
             ttl=d.get("ttl", ""),

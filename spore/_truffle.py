@@ -146,18 +146,21 @@ class TruffleClient:
         )
 
     def _parse(self, r: dict) -> InstanceType:
+        # Keys match the REST API's truffleaws.InstanceTypeResult json tags:
+        # vcpus, memory_mib, gpus, gpu_memory_mib, availability_zones (MiB→GiB
+        # here). Earlier code guessed mangled keys (memory_mi_b, gpu_memory_mi_b,
+        # available_a_zs), so memory/GPU-memory/AZs were silently zeroed (#2).
         return InstanceType(
             instance_type=r.get("instance_type", ""),
             region=r.get("region", ""),
-            vcpus=int(r.get("v_cp_us", r.get("vcpus", 0))),
-            memory_gib=float(r.get("memory_mi_b", r.get("memory_gib", 0))) / 1024
-                if r.get("memory_mi_b") else float(r.get("memory_gib", 0)),
+            vcpus=int(r.get("vcpus", 0)),
+            memory_gib=float(r.get("memory_mib", 0)) / 1024,
             architecture=r.get("architecture", ""),
             on_demand_price=float(r.get("on_demand_price", 0)),
-            gpus=int(r.get("gp_us", r.get("gpus", 0))),
+            gpus=int(r.get("gpus", 0)),
             gpu_model=r.get("gpu_model", ""),
-            gpu_memory_gib=float(r.get("gpu_memory_mi_b", 0)) / 1024,
-            available_azs=r.get("available_a_zs", r.get("available_azs", [])),
+            gpu_memory_gib=float(r.get("gpu_memory_mib", 0)) / 1024,
+            available_azs=r.get("availability_zones", []),
         )
 
     # ── Notebook display ──────────────────────────────────────────────────────
