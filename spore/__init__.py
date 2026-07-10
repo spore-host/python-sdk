@@ -12,6 +12,11 @@ Or with an explicit client:
     c.truffle.find("amd epyc genoa")
 """
 
+# Defer annotation evaluation so `_default: Client | None` (PEP 604 union) doesn't
+# execute at import on Python 3.9 (requires-python >=3.9); without this it raises
+# `TypeError: unsupported operand type(s) for |`.
+from __future__ import annotations
+
 from .client import Client
 from ._spawn import Instance, SpawnClient
 from ._truffle import InstanceType, QuotaInfo, SpotPrice, TruffleClient
