@@ -7,19 +7,29 @@ truffle's InstanceTypeResult json tags), so a future key drift fails here.
 
 from __future__ import annotations
 
+import pytest
+
 import spore
-from spore import Client, Instance, SpawnClient, TruffleClient
+from spore import (
+    Client,
+    Instance,
+    NotificationsClient,
+    SpawnClient,
+    TruffleClient,
+)
 
 
 class FakeClient:
     """A Client stand-in that returns canned responses instead of HTTP calls."""
 
-    def __init__(self, get_return=None, post_return=None):
+    def __init__(self, get_return=None, post_return=None, delete_return=None):
         self._get_return = get_return or {}
         self._post_return = post_return or {}
+        self._delete_return = delete_return or {}
         self._region = "us-east-1"
         self.get_calls = []
         self.post_calls = []
+        self.delete_calls = []
 
     def get(self, path, params=None):
         self.get_calls.append((path, params))
@@ -28,6 +38,10 @@ class FakeClient:
     def post(self, path, body=None):
         self.post_calls.append((path, body))
         return self._post_return
+
+    def delete(self, path, body=None):
+        self.delete_calls.append((path, body))
+        return self._delete_return
 
 
 # ── Fix #1: module shadowing — the documented quickstart must work ──────────
@@ -169,9 +183,64 @@ def test_spawn_list_parses_instances():
     assert [i.instance_id for i in insts] == ["i-1", "i-2"]
 
 
+# ── #5: notifications API (register / deregister) ──────────────────────────
+
+def test_notifications_register_builds_user_key_from_triple():
+    fake = FakeClient(post_return={"status": "registered", "phone": "+15551234567"})
+    nc = NotificationsClient(fake)
+    nc.register("+15551234567", platform="slack", workspace_id="T0ABC", user_id="U0XYZ")
+
+    path, body = fake.post_calls[0]
+    assert path == "/v1/notifications/register"
+    assert body == {"phone": "+15551234567", "user_key": "slack#T0ABC#U0XYZ"}
+
+
+def test_notifications_register_accepts_raw_user_key():
+    fake = FakeClient(post_return={"status": "registered"})
+    NotificationsClient(fake).register("+15551234567", user_key="teams#W1#U9")
+    _, body = fake.post_calls[0]
+    assert body["user_key"] == "teams#W1#U9"
+
+
+def test_notifications_register_requires_identity():
+    with pytest.raises(ValueError):
+        NotificationsClient(FakeClient()).register("+15551234567")
+    # partial triple is also insufficient
+    with pytest.raises(ValueError):
+        NotificationsClient(FakeClient()).register("+1", platform="slack")
+
+
+def test_notifications_deregister_uses_delete_with_user_key():
+    fake = FakeClient(delete_return={"status": "deregistered"})
+    NotificationsClient(fake).deregister(
+        platform="slack", workspace_id="T0ABC", user_id="U0XYZ"
+    )
+    path, body = fake.delete_calls[0]
+    assert path == "/v1/notifications/register"
+    assert body == {"user_key": "slack#T0ABC#U0XYZ"}
+
+
+def test_top_level_notifications_proxy_exposes_register():
+    assert hasattr(spore.notifications, "register")
+    assert hasattr(spore.notifications, "deregister")
+    assert isinstance(spore.notifications._target(), NotificationsClient)
+
+
+# ── #4: launch() no longer accepts the dead `phone` param ───────────────────
+
+def test_launch_rejects_phone_kwarg():
+    fake = FakeClient(post_return={"instance_id": "i-0", "state": "pending"})
+    with pytest.raises(TypeError):
+        SpawnClient(fake).launch("t3.micro", phone="+15551234567")
+
+
 # ── Client basics ───────────────────────────────────────────────────────────
 
 def test_client_repr_masks_api_key():
     c = Client(api_key="sk_secret_value_1234567890")
     assert "sk_secre" in repr(c)
     assert "secret_value" not in repr(c)
+
+
+def test_client_has_delete():
+    assert hasattr(Client, "delete")

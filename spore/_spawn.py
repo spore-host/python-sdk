@@ -151,7 +151,6 @@ class SpawnClient:
         on_complete: str = "terminate",
         slack_workspace: Optional[str] = None,
         active_processes: Optional[List[str]] = None,
-        phone: Optional[str] = None,
         wait: bool = False,
     ) -> Instance:
         """
@@ -167,8 +166,10 @@ class SpawnClient:
             on_complete:      Action on SPAWN_COMPLETE: "terminate", "stop", "hibernate".
             slack_workspace:  Slack workspace ID for lifecycle notifications.
             active_processes: Process names that indicate active work (e.g. ["rsession"]).
-            phone:            Phone number for SMS notifications (+1XXXXXXXXXX).
             wait:             If True, block until instance is running.
+
+        For SMS notifications, register your number separately via
+        ``spore.notifications.register(...)`` — it is not a launch parameter.
 
         Returns:
             Instance object.
