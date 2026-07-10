@@ -8,6 +8,15 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-07-10
+
+### Added
+- **`spawn.launch()` now exposes the remaining launch parameters** (#6):
+  `ami` (custom AMI), `key_name` (SSH key pair), `pre_stop` (pre-stop hook), and
+  `completion_file` (path spored watches). These were accepted by the REST launch
+  endpoint but not surfaced by the SDK. With this, the SDK covers the full launch
+  body. Additive; unset params are omitted.
+
 ## [0.1.4] - 2026-07-10
 
 ### Added
@@ -62,7 +71,8 @@ Baseline. Earlier history is in the
 
 ---
 
-[Unreleased]: https://github.com/spore-host/python-sdk/compare/python-v0.1.4...HEAD
+[Unreleased]: https://github.com/spore-host/python-sdk/compare/python-v0.1.5...HEAD
+[0.1.5]: https://github.com/spore-host/python-sdk/compare/python-v0.1.4...python-v0.1.5
 [0.1.4]: https://github.com/spore-host/python-sdk/compare/python-v0.1.3...python-v0.1.4
 [0.1.3]: https://github.com/spore-host/python-sdk/compare/python-v0.1.2...python-v0.1.3
 [0.1.2]: https://github.com/spore-host/python-sdk/releases/tag/python-v0.1.2

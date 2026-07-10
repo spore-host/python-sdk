@@ -151,6 +151,10 @@ class SpawnClient:
         on_complete: str = "terminate",
         slack_workspace: Optional[str] = None,
         active_processes: Optional[List[str]] = None,
+        ami: Optional[str] = None,
+        key_name: Optional[str] = None,
+        pre_stop: Optional[str] = None,
+        completion_file: Optional[str] = None,
         wait: bool = False,
     ) -> Instance:
         """
@@ -166,6 +170,11 @@ class SpawnClient:
             on_complete:      Action on SPAWN_COMPLETE: "terminate", "stop", "hibernate".
             slack_workspace:  Slack workspace ID for lifecycle notifications.
             active_processes: Process names that indicate active work (e.g. ["rsession"]).
+            ami:              Custom AMI id (default: spore.host's recommended AMI).
+            key_name:         EC2 key pair name for SSH access.
+            pre_stop:         Shell command run on the instance before stop/terminate.
+            completion_file:  Path spored watches for the completion signal
+                              (default: /tmp/SPAWN_COMPLETE).
             wait:             If True, block until instance is running.
 
         For SMS notifications, register your number separately via
@@ -199,6 +208,14 @@ class SpawnClient:
             body["slack_workspace"] = slack_workspace
         if active_processes:
             body["active_processes"] = ",".join(active_processes)
+        if ami:
+            body["ami"] = ami
+        if key_name:
+            body["key_name"] = key_name
+        if pre_stop:
+            body["pre_stop"] = pre_stop
+        if completion_file:
+            body["completion_file"] = completion_file
 
         data = self._c.post("/v1/instances", body)
         # Build via _parse (single source of truth for API→Instance mapping). The

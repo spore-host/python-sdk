@@ -158,6 +158,32 @@ def test_spawn_launch_returns_instance_with_fields():
     assert body["ttl"] == "4h"
 
 
+def test_spawn_launch_forwards_advanced_params():
+    # #6: ami/key_name/pre_stop/completion_file must reach the request body with
+    # the API's real keys (instances.go launch body).
+    fake = FakeClient(post_return=_launch_response())
+    SpawnClient(fake).launch(
+        "c7i.2xlarge",
+        ami="ami-0abc",
+        key_name="my-key",
+        pre_stop="aws s3 sync /out s3://bucket/",
+        completion_file="/tmp/DONE",
+    )
+    _, body = fake.post_calls[0]
+    assert body["ami"] == "ami-0abc"
+    assert body["key_name"] == "my-key"
+    assert body["pre_stop"] == "aws s3 sync /out s3://bucket/"
+    assert body["completion_file"] == "/tmp/DONE"
+
+
+def test_spawn_launch_omits_unset_advanced_params():
+    fake = FakeClient(post_return=_launch_response())
+    SpawnClient(fake).launch("c7i.2xlarge")
+    _, body = fake.post_calls[0]
+    for k in ("ami", "key_name", "pre_stop", "completion_file"):
+        assert k not in body
+
+
 # ── spawn status/list parsing against real instances.go keys ────────────────
 
 def test_spawn_status_parses_instance():
