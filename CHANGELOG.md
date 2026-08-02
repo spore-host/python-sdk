@@ -8,6 +8,25 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+### Fixed
+- **`ruff` was a declared dev dependency that CI never ran, so it enforced
+  nothing — it's now pinned `<0.16` and actually invoked.** ruff 0.16 moved a
+  large set of opinionated rules into its **default** set; unpinned, `ruff check .`
+  reported 76 findings here, of which 73 were annotation-style suggestions
+  (`UP045`/`UP037`/`UP006`) that the rest of the suite doesn't enforce either. With
+  the cap, 3 real findings remained, all in `examples/` and all fixed:
+  - `marimo_example.py` computed a `state_color` for the instance state and then
+    never used it — the status table rendered the state uncolored. Now applied, as
+    originally intended.
+  - `script_example.py` had an f-string with no placeholders.
+  - `jupyter_example.ipynb` tripped `E402` (import not at top of cell), which is
+    inherent to notebooks — every cell is its own top level — so it's excluded per
+    file rather than worked around in the example.
+  A `lint` job now runs `ruff check .` on 3.12 (lint results don't vary across the
+  test matrix), so the pin protects a check that actually executes. Matches the cap
+  on the four workflow adapters.
+  No change to the shipped `spore` package — examples, tooling and CI only.
+
 ## [0.1.5] - 2026-07-10
 
 ### Added

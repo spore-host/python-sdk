@@ -135,7 +135,7 @@ def _(inst_input, mo):
         | Field | Value |
         |-------|-------|
         | Type | {inst.instance_type} |
-        | State | **{inst.state}** |
+        | State | <span style="color:{state_color}">**{inst.state}**</span> |
         | Region | {inst.region} |
         | IP | {inst.public_ip or "—"} |
         | TTL | {inst.ttl or "—"} |

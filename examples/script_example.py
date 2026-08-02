@@ -55,7 +55,7 @@ def extend_if_needed(name: str, min_ttl_hours: float = 1.0):
     # For demo: just show how to extend
     if inst.state == "running":
         inst.extend("2h")
-        print(f"  → Extended TTL by 2h")
+        print("  → Extended TTL by 2h")
 
 
 if __name__ == "__main__":
