@@ -8,6 +8,22 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+### Fixed
+- **A pin's version comment can no longer silently misstate what CI runs.**
+  `tests/test_ci_hygiene.py` required only that *some* `# vN` comment be present,
+  never that it was true. A wrong label is worse than a missing one: it makes a
+  major-version jump read as a routine same-line bump. Not hypothetical —
+  Dependabot bumped nf-spawn's `checkout` pin to a **v7.0.1** SHA while leaving the
+  comment reading `# v6`, and the identical regex passed it. Two complementary
+  halves now, because neither alone suffices: the test requires an exact `vX.Y.Z`
+  (offline, hermetic — catches vague labels), and a new `scripts/verify-pins.sh`
+  resolves each SHA against the tag its comment claims and fails if they disagree
+  (needs the network, so it runs as its own CI step — catches exact-but-false
+  labels the offline half cannot see). This repo's nine pins were already exact
+  and true, so nothing needed relabelling; the gate is what changed. The new step
+  runs in the single-version `lint` job rather than the 4-way `test` matrix, for
+  the same reason `ruff` does — pin results don't vary across Python versions.
+
 ### Security
 - **The PyPI publish job ran a mutable *branch* ref; every action is now pinned to
   a commit SHA, with Dependabot to bump the pins** ([#10]). `publish-python.yaml`
