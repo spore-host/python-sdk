@@ -8,6 +8,29 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+### Security
+- **The PyPI publish job ran a mutable *branch* ref; every action is now pinned to
+  a commit SHA, with Dependabot to bump the pins** ([#10]). `publish-python.yaml`
+  grants `id-token: write` in the `pypi` environment — whatever runs there can
+  publish `spore-host` to PyPI as us — and it invoked
+  `pypa/gh-action-pypi-publish@release/v1`. That is a branch, not a tag, so it
+  resolved to whatever the branch tip was at the moment the job ran: nothing in
+  this repo sat between an upstream force-push and code executing with that
+  publish authority. All 9 `uses:` refs across both workflows are now full SHAs
+  with a `# vX.Y.Z` comment.
+  - A SHA alone would trade a mutable-tag hole for a staleness one — pins don't
+    move, including past a security fix — so a new `.github/dependabot.yml` bumps
+    them weekly (7-day cooldown, so a freshly-published tag sits before it's
+    proposed) and covers `pip` dependencies too. Its group pattern is `*`, not
+    `actions/*`: the publish action lives under `pypa/`, which `actions/*` would
+    silently exclude. `ruff >=0.16` is explicitly ignored so a bump can't undo the
+    deliberate cap below.
+  - `tests/test_ci_hygiene.py` makes both halves regressions rather than
+    conventions: reverting a pin or dropping the Dependabot entry now fails
+    `pytest`, which the existing test matrix already runs. `pyyaml` joins the
+    `[dev]` extra so those tests can't degrade into a green skip.
+  No change to the shipped `spore` package — CI wiring and tests only.
+
 ### Fixed
 - **`ruff` was a declared dev dependency that CI never ran, so it enforced
   nothing — it's now pinned `<0.16` and actually invoked.** ruff 0.16 moved a
@@ -89,6 +112,8 @@ Baseline. Earlier history is in the
 [commit log](https://github.com/spore-host/python-sdk/commits/main).
 
 ---
+
+[#10]: https://github.com/spore-host/python-sdk/issues/10
 
 [Unreleased]: https://github.com/spore-host/python-sdk/compare/python-v0.1.5...HEAD
 [0.1.5]: https://github.com/spore-host/python-sdk/compare/python-v0.1.4...python-v0.1.5
