@@ -39,7 +39,7 @@ Full documentation at **[docs.spore.host/guides/python-sdk](https://docs.spore.h
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - AWS credentials configured (`~/.aws/credentials` or environment variables)
 - `boto3`, `requests`
 
