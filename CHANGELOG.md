@@ -8,6 +8,10 @@ Release tags use the `python-vX.Y.Z` prefix.
 
 ## [Unreleased]
 
+### Added
+
+- `SECURITY.md`: report vulnerabilities privately through GitHub's private vulnerability reporting (the repository's Security tab), not public issues.
+
 ### Removed
 
 - **Python 3.9 is no longer supported; Python 3.13 is now tested** (`requires-python = ">=3.10"`). Python 3.9 reached end of life in October 2025 and gets no security fixes, and GitHub's `ubuntu-latest` runner (Ubuntu 26.04) no longer provides it, which broke CI. The test matrix is now 3.10–3.13.
